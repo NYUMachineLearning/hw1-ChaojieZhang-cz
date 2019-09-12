@@ -288,7 +288,36 @@ data(iris)
   * Try two different linkage types, and two different distance metrics. 
   * For one linkage type and one distance metric, try two different cut points. 
   * Using this clustering, color the PCA plot according to the clusters. (6  plots in total)
-  
+
+```{r}
+#Subset the Iris dataset
+Iris_data <- as.matrix(iris[,1:4])
+
+
+#Kmeans Algorithm Step1：randomly assign all datas into 3 group
+n <- nrow(Iris_data)
+index <- sample(1:n,size=n)
+group_1 <- Iris_data[index[1:(n/3)],]
+group_2 <- Iris_data[index[(n/3):(2*n/3)],]
+group_3 <- Iris_data[index[(2*n/3):n],]
+
+
+#Kmeans Algorithm Step2：calculate the mean-points of 3 groups
+group_1_mean <- apply(group_1,2,mean)
+group_2_mean <- apply(group_2,2,mean)
+group_3_mean <- apply(group_3,2,mean)
+
+
+#Kmeans Algorithm Step3：align the datas to closest mean-point
+align_group_index <- c()
+for (point_index in 1:n) {
+  point <- Iris_data[point_index,]
+  distance <- c(as.numeric(dist(rbind(point,group_1_mean),method = "euclidean")) ,as.numeric(dist(rbind(point,group_2_mean),method = "euclidean")), as.numeric(dist(rbind(point,group_3_mean),method = "euclidean")))
+  align_group_index <- c(align_group_index,c(which.min(distance)))
+}
+print(align_group_index)
+```
+
 
 # Optional material
 On PCA:
