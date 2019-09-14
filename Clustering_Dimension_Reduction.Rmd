@@ -289,14 +289,16 @@ data(iris)
   * For one linkage type and one distance metric, try two different cut points. 
   * Using this clustering, color the PCA plot according to the clusters. (6  plots in total)
 
-```{r}
+
+Kmeans algorithm and k=3
+```{r} 
 #Subset the Iris dataset
 Iris_data <- as.matrix(iris[,1:4])
 
 
 #Kmeans Algorithm Step1：randomly assign all datas into 3 group
-n <- nrow(Iris_data)
-index <- sample(1:n,size=n)
+n <- nrow(Iris_data) #n is the number of data
+index <- sample(1:n,size=n) #randomly lable the data
 group_1 <- Iris_data[index[1:(n/3)],]
 group_2 <- Iris_data[index[(n/3):(2*n/3)],]
 group_3 <- Iris_data[index[(2*n/3):n],]
@@ -309,14 +311,67 @@ group_3_mean <- apply(group_3,2,mean)
 
 
 #Kmeans Algorithm Step3：align the datas to closest mean-point
-align_group_index <- c()
+align_group_index <- c() #create an empty vector to store the grouping result
 for (point_index in 1:n) {
   point <- Iris_data[point_index,]
-  distance <- c(as.numeric(dist(rbind(point,group_1_mean),method = "euclidean")) ,as.numeric(dist(rbind(point,group_2_mean),method = "euclidean")), as.numeric(dist(rbind(point,group_3_mean),method = "euclidean")))
-  align_group_index <- c(align_group_index,c(which.min(distance)))
+  distance <- c(as.numeric(dist(rbind(point,group_1_mean),method = "euclidean")), as.numeric(dist(rbind(point,group_2_mean),method = "euclidean")), as.numeric(dist(rbind(point,group_3_mean),method = "euclidean"))) #calculate all distances to different mean points
+  align_group_index <- c(align_group_index,c(which.min(distance))) #find the closest mean and connect the data to 
 }
 print(align_group_index)
+
 ```
+First iteration:
+  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ [51] 3 3 3 2 3 3 3 2 3 2 2 3 2 3 2 3 3 3 3 2 3 3 3 3 3 3 3 3 3 2 2 2 2 3 3 3 3 3 3 2 3 3 2 2 3 3 3 3 2 3
+[101] 3 3 3 3 3 3 2 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+
+Second iteration:
+  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ [51] 2 2 2 2 2 2 2 1 2 3 1 2 2 2 3 2 2 2 2 3 2 2 2 2 2 2 2 2 2 1 3 3 3 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 1 2
+[101] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+
+
+Kmeans algorithm function and k can be determined
+```{r}
+Kmeans_Algorithm_Function <- function(k) {
+  Iris_data <- as.matrix(iris[,1:4])
+  n <- nrow(Iris_data)
+  index <- sample(1:n,size=n)
+  group_1_mean <- c()
+  for (count in 1:k) {
+    group_count <- Iris_data[index[((count-1)*n/k+1):(count*n/k)],]
+    group_mean_count <- apply(group_count,2,mean)
+    group_mean_count_name <- paste('group_mean_',as.character(count),sep = "")
+    assign(group_mean_count_name,group_mean_count)
+  }
+  
+  align_group_index <- c()
+  for (point_index in 1:n) {
+    point <- Iris_data[point_index,]
+    distance_vector <- c()
+    for (count in 1:k) {
+      distance <- dist(rbind(point,get(paste('group_mean_',as.character(count),sep = ""))),method = "euclidean")
+      as.numeric(distance)
+      distance_vector <- c(distance_vector,c(distance))
+    }
+    align_group_index <- c(align_group_index,c(which.min(distance_vector)))
+  }
+  align_group_index
+}
+
+Kmeans_Algorithm_Function(10)
+```
+First iteration(k=2, run Kmeans_Algorithm_Function(2)):
+  [1] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+ [51] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1
+[101] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+
+Second iteration(k=10, run Kmeans_Algorithm_Function(10)):
+  [1] 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 7 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4
+ [51] 2 2 2 9 2 5 2 1 6 9 9 8 9 6 9 6 5 9 6 9 2 8 2 6 6 6 2 2 6 9 9 9 9 2 5 8 2 6 5 9 5 6 9 1 5 5 5 6 4 5
+[101] 2 2 2 2 2 2 5 2 2 2 2 2 2 2 2 2 2 2 2 6 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+
+
 
 
 # Optional material
